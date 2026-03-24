@@ -1,0 +1,124 @@
+#include <iostream>
+#include <string>
+using namespace std;
+struct Record {
+    int id=0;
+    string inRecord[100];
+    int nRecord=0;
+    Record& operator=(Record& r) {
+        for(int i=0;i<nRecord;i++)inRecord[i]="\0";
+        id = r.id;
+        for (int i = 0; i < r.nRecord; i++) {
+            inRecord[i] = r.inRecord[i];
+        }
+        nRecord = r.nRecord;
+        return *this;
+    }
+    friend ostream& operator<<(ostream& os, Record& r) {
+        os << r.id << "\n";
+        for (int i = 0; i < r.nRecord; i++)
+            os << r.inRecord[i] << " ";
+        os << "\n" << r.nRecord;
+        return os;
+    }
+};
+int comp(const void* a, const void* b) {
+    return ((Record*)a)->id - ((Record*)b)->id;
+}
+int merge(Record* f3,Record* f1, int nf1, Record* f2, int nf2) {
+    int min = (nf1 < nf2) ? nf1 : nf2;
+    Record* f1const = f1;
+    Record* f2const = f2;
+    int i;
+    int k=0;
+    int kf1=0;
+    int kf2=0;
+    for ( i = 0; i < min; i++) {
+        if (f1->id > f2->id) {
+            
+            *f3 = *f2;
+            k++;
+            kf2++;
+            
+        }
+        else
+        {
+            *f3 = *f1;
+            kf1++;
+            if (f1->id == f2->id) {
+                kf2++;
+                for (int j = 0; j < 3; j++)
+                    f3->inRecord[f1->nRecord + j] = f2->inRecord[j];
+                f3->nRecord += f2->nRecord;
+            }
+        }
+        f1++; f2++; f3++;
+    }
+    if(kf1 < nf1){
+        for (int j = kf1; j < nf1; j++) {
+            *f3 = f1const[j];
+            f3++; 
+        }
+    }
+    if(kf2 < nf2) {
+        for (int j = kf2; j < nf2; j++) {
+            *f3 = f2const[j];
+            f3++; 
+        }
+    }
+    return (nf1 > nf2) ? nf1+k : nf2 + k;
+
+}
+
+
+int main()
+{
+    Record f1[10];
+    f1[0].id = 1;
+    f1[0].inRecord[0] = "z1=z2";
+    f1[0].inRecord[1] = "z3=z4";
+    f1[0].inRecord[2] = "z10=z3";
+    f1[0].nRecord = 3;
+    f1[1].id = 5;
+    f1[1].inRecord[0] = "z15=z2";
+    f1[1].inRecord[1] = "z35=z4";
+    f1[1].inRecord[2] = "z105=z3";
+    f1[1].nRecord = 3;
+    f1[2].id = 2;
+    f1[2].inRecord[0] = "z15=z2";
+    f1[2].inRecord[1] = "z35=z4";
+    f1[2].inRecord[2] = "z105=z3";
+    f1[2].nRecord = 3;
+    for ( int i = 0; i < 3;i++)cout << f1[i] << "\n\n";
+    qsort(f1, 3, sizeof(Record), comp);
+    for (int i = 0; i < 3; i++)cout << f1[i] << "\n\n";
+  
+    Record f2[10];
+    f2[0].id = 3;
+    f2[0].inRecord[0] = "z11=z2";
+    f2[0].inRecord[1] = "z31=z4";
+    f2[0].inRecord[2] = "z15=z3";
+    f2[0].nRecord = 3;
+    f2[1].id = 1;
+    f2[1].inRecord[0] = "z115=z2";
+    f2[1].inRecord[1] = "z315=z4";
+    f2[1].inRecord[2] = "z1015=z3";
+    f2[1].nRecord = 3;
+    f2[2].id = 2;
+    f2[2].inRecord[0] = "z151=z2";
+    f2[2].inRecord[1] = "z351=z4";
+    f2[2].inRecord[2] = "z1051=z3";
+    f2[2].nRecord = 3;
+    f2[3].id = 6;
+    f2[3].inRecord[0] = "z151=z2";
+    f2[3].inRecord[1] = "z351=z4";
+    f2[3].inRecord[2] = "z1051=z3";
+    f2[3].nRecord = 3;
+    qsort(f2, 4, sizeof(Record), comp);
+    cout << "\nf2-----------\n";
+    Record f3[10];
+    for (int i = 0; i < 3; i++)cout << f2[i] << "\n\n";
+    int k = merge(f3,f1,3, f2,4);
+    cout << "\n after merge " << k << "\n";
+    for (int i = 0; i < k; i++)cout << f3[i] << "\n\n";
+}
