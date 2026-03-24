@@ -1,1 +1,112 @@
+/*sections*/
+#include <stdio.h> 
+#include <stdlib.h> 
+#include <string.h>
 
+#define MAX_SECTIONS 50 /*максимум 50 секций*/
+#define MAX_LINES 50 /*максимум 50 строк в секции */
+#define LEN 256 /*максимум 256 символов в строке*/
+
+char sections[MAX_SECTIONS][LEN]; /*массив имён секций*/
+char data[MAX_SECTIONS][MAX_LINES][LEN]; /*строки внутри секций*/
+int counts[MAX_SECTIONS]; /*сколько строк в каждой секции*/
+int sec_count = 0; /*текущее кол-во секций*/
+
+/* найти секцию */
+int find_section(const char* name) {
+    for (int i = 0; i < sec_count; i++) {
+        if (strcmp(sections[i], name) == 0)
+            return i;
+    }
+    return -1;
+}
+/* добавить секцию */
+int add_section(const char* name) {
+    if (sec_count >= MAX_SECTIONS) return -1; {
+        strcpy_s(sections[sec_count], name);
+        counts[sec_count] = 0;
+        return sec_count++;
+        /*printf("Too many sections\n");
+        exit(1);*/
+    }
+    /*strcpy_s(sections[sec_count], name);
+    counts[sec_count] = 0;
+    return sec_count++;*/
+}
+/* чтение файла */
+void read_file(const char* filename) {
+    FILE* f = NULL;
+    if (fopen_s(&f, filename, "r") != 0) {
+        perror(filename);
+        return;
+    }
+    /*FILE* f = fopen_s(filename, "r");
+    if (!f) {
+        perror(filename);
+        exit(1);
+    }*/
+    char line[LEN];
+    int current = -1;
+
+    while (fgets(line, LEN, f)) {
+
+        /* если секция*/
+        if (line[0] == '[') {
+            char name[LEN];
+            if (sscanf_s(line, "[%255[^]]", name) == 1) {
+
+                int idx = find_section(name);
+                if (idx == -1) {
+                    idx = add_section(name);
+                }
+                if (idx == -1) {
+                    fprintf(stderr, "Too many sections\n");
+                    exit(1);
+                }
+                /*idx = add_section(name);*/
+
+                current = idx;
+            }
+            else {
+                current = -1;
+            }
+        }
+        /*else if (current != -1 && counts[current] < MAX_LINES) {*/
+        else if (line[0] != '\n' && current != -1) {
+
+            if (counts[current] < MAX_LINES)
+                strcpy_s(data[current][counts[current]++], line);
+
+        }
+        fclose(f);
+    }
+}
+    
+
+
+/* вывод */
+void print_all() {
+    for (int i = 0; i < sec_count; i++) {
+        printf("[%s]", sections[i]);
+        if (counts[i] > 0)
+            printf(" %s", data[i][0]); //первая строка рядом с секцией
+        for (int j = 1; j < counts[i]; j++) {
+            printf("%s", data[i][j]); //остальные строки
+        }
+    }
+}
+int main() {
+    read_file("file1.txt");
+    read_file("file2.txt");
+//int main(int argc, char* argv[]) {
+//    if (argc != 3) {
+//        printf("Usage: %s file1 file2\n", argv[0]);
+//        return 1;
+//    }
+//    read_file(argv[1]);
+//    read_file(argv[2]);
+
+    print_all();
+
+    return 0;
+}
